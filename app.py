@@ -6,6 +6,7 @@ from flask_restplus import Api
 from blue_prints.detect_api import detect_api, ns
 
 import sys
+
 sys.path.append("./blue_prints/detect")
 
 app = Flask(__name__)
@@ -21,4 +22,4 @@ api = Api(app, version='1.0', title='insects detection API',
 api.add_namespace(ns)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
