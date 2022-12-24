@@ -51,7 +51,7 @@ class DETECT(Resource):
         # view_image(image_path=source, result=result)
         # 结果可能还需要处理为整数
         response = make_response(jsonify(
-            {"description": "result中的元素的第一个位置是类别，剩下四个是x1y1x2y2", "code": 2000, "result": result}
+            {"description": "result中的元素的第一个位置是类别，剩下四个是x1y1x2y2", "code": 200, "result": result}
         ))
 
         # 检测完成之后，将图片删除

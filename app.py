@@ -12,6 +12,7 @@ sys.path.append("./blue_prints/detect")
 app = Flask(__name__)
 
 app.register_blueprint(detect_api, url_prefix="/detect_api")
+app.config['JSON_AS_ASCII'] = False
 
 bootstrap = Bootstrap(app)
 CORS(app, supports_credentials=True)
