@@ -5,6 +5,7 @@
 @time: 2022/12/15 20:03
 """
 import cv2
+import numpy as np
 import requests
 import torch
 from PIL import Image
@@ -20,12 +21,14 @@ from blue_prints.detect.utils.torch_utils import select_device
 
 def detect(source=r"D:\project\python\Python-Web\flask-01\blue_prints\detect\inference\images\bus.jpg",
            weights="yolov7.pt",
+           source_shape=[],
            img_size=640,
            conf_thres=0.25,
            iou_thres=0.1,
            save_conf=False,
            augment=False,
            ):
+    h, w, _ = source_shape[0], source_shape[1], source_shape[2]
     # print(weights)
     device = select_device()
     half = device.type != 'cpu'  # half precision only supported on CUDA
@@ -36,21 +39,19 @@ def detect(source=r"D:\project\python\Python-Web\flask-01\blue_prints\detect\inf
     if half:
         model.half()  # to FP16
 
-    dataset = LoadImages(source, img_size=img_size, stride=stride)
+    dataset = LoadImages(source, old_shape=source_shape, img_size=img_size, stride=stride)
     names = model.module.names if hasattr(model, 'module') else model.names
 
     # Run inference
     if device.type != 'cpu':
         model(torch.zeros(1, 3, img_size, img_size).to(device).type_as(next(model.parameters())))  # run once
 
-    for path, img, im0s, vid_cap in dataset:
+    for img, im0s in dataset:
         img = torch.from_numpy(img).to(device)
         img = img.half() if half else img.float()  # uint8 to fp16/32
         img /= 255.0  # 0 - 255 to 0.0 - 1.0
         if img.ndimension() == 3:
             img = img.unsqueeze(0)
-
-        h, w, _ = cv2.imread(source).shape
 
         with torch.no_grad():
             pred = model(img, augment=augment)[0]
@@ -59,7 +60,7 @@ def detect(source=r"D:\project\python\Python-Web\flask-01\blue_prints\detect\inf
         # Process detections
         result_one_image = []
         for i, det in enumerate(pred):  # detections per image
-            p, s, im0, frame = path, '', im0s, getattr(dataset, 'frame', 0)
+            s, im0, frame = '', im0s, getattr(dataset, 'frame', 0)
 
             gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
             if len(det):

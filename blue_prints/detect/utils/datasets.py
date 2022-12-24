@@ -124,34 +124,17 @@ class _RepeatSampler(object):
 
 
 class LoadImages:  # for inference
-    def __init__(self, path, img_size=640, stride=32):
-        p = str(path)  # os-agnostic absolute path
-        if '*' in p:
-            files = sorted(glob.glob(p, recursive=True))  # glob
-        elif os.path.isdir(p):
-            files = sorted(glob.glob(os.path.join(p, '*.*')))  # dir
-        elif os.path.isfile(p):
-            files = [p]  # files
-        elif "http" in p:
-            files = [p]
-        else:
-            raise Exception(f'ERROR: {p} does not exist')
-
-        images = [x for x in files if x.split('.')[-1].lower() in img_formats]
-        videos = [x for x in files if x.split('.')[-1].lower() in vid_formats]
-        ni, nv = len(images), len(videos)
+    def __init__(self, path, old_shape, img_size=640, stride=32):
+        images = [path]
+        ni = len(images)
 
         self.img_size = img_size
         self.stride = stride
-        self.files = images + videos
-        self.nf = ni + nv  # number of files
-        self.video_flag = [False] * ni + [True] * nv
+        self.files = images
+        self.nf = ni
         self.mode = 'image'
-        if any(videos):
-            self.new_video(videos[0])  # new video
-        else:
-            self.cap = None
-        assert self.nf > 0, f'No images or videos found in {p}. ' \
+        self.old_shape = old_shape
+        assert self.nf > 0, f'No images or videos found ' \
                             f'Supported formats are:\nimages: {img_formats}\nvideos: {vid_formats}'
 
     def __iter__(self):
@@ -161,40 +144,20 @@ class LoadImages:  # for inference
     def __next__(self):
         if self.count == self.nf:
             raise StopIteration
-        path = self.files[self.count]
+        img0 = self.files[self.count]
 
-        if self.video_flag[self.count]:
-            # Read video
-            self.mode = 'video'
-            ret_val, img0 = self.cap.read()
-            if not ret_val:
-                self.count += 1
-                self.cap.release()
-                if self.count == self.nf:  # last video
-                    raise StopIteration
-                else:
-                    path = self.files[self.count]
-                    self.new_video(path)
-                    ret_val, img0 = self.cap.read()
-
-            self.frame += 1
-            print(f'video {self.count + 1}/{self.nf} ({self.frame}/{self.nframes}) {path}: ', end='')
-
-        else:
-            # Read image
-            self.count += 1
-            img0 = cv2.imread(path)  # BGR
-            assert img0 is not None, 'Image Not Found ' + path
-            # print(f'image {self.count}/{self.nf} {path}: ', end='')
+        # Read image
+        self.count += 1
+        assert 'Image Not Found '
 
         # Padded resize
-        img = letterbox(img0, self.img_size, stride=self.stride)[0]
+        img = letterbox(img0, self.old_shape, self.img_size, stride=self.stride)[0]
 
         # Convert
         img = img[:, :, ::-1].transpose(2, 0, 1)  # BGR to RGB, to 3x416x416
         img = np.ascontiguousarray(img)
 
-        return path, img, img0, self.cap
+        return img, img0
 
     def new_video(self, path):
         self.frame = 0
@@ -982,9 +945,10 @@ def replicate(img, labels):
     return img, labels
 
 
-def letterbox(img, new_shape=(640, 640), color=(114, 114, 114), auto=True, scaleFill=False, scaleup=True, stride=32):
+def letterbox(img, old_shape, new_shape=(640, 640), color=(114, 114, 114), auto=True, scaleFill=False, scaleup=True,
+              stride=32):
     # Resize and pad image while meeting stride-multiple constraints
-    shape = img.shape[:2]  # current shape [height, width]
+    shape = old_shape[:2]  # current shape [height, width]
     if isinstance(new_shape, int):
         new_shape = (new_shape, new_shape)
 
@@ -1008,6 +972,7 @@ def letterbox(img, new_shape=(640, 640), color=(114, 114, 114), auto=True, scale
     dh /= 2
 
     if shape[::-1] != new_unpad:  # resize
+        # print(type(img))
         img = cv2.resize(img, new_unpad, interpolation=cv2.INTER_LINEAR)
     top, bottom = int(round(dh - 0.1)), int(round(dh + 0.1))
     left, right = int(round(dw - 0.1)), int(round(dw + 0.1))

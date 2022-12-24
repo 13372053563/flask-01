@@ -4,8 +4,14 @@
 @file: detect_api.py
 @time: 2022/12/15 19:41
 """
+import base64
 import os
+from io import BytesIO
+
+import cv2
+import numpy as np
 import requests
+from PIL import Image
 from flask import Blueprint, make_response, jsonify, request
 from flask_restplus import Api, Resource
 
@@ -21,17 +27,15 @@ ns = api.namespace('detect_api', description='结晶检测相关接口')
 @ns.route('/start_detect/<path:img_path>')
 class DETECT(Resource):
     def get(self, img_path='not specified'):
-        if "http" in img_path:
-            req = requests.get(img_path)
-            fileName = str(img_path).split("/")[-1]
-            source = os.path.split(os.path.realpath(__file__))[0] + '/detect/inference/images/' + fileName
-            with open(source, 'wb') as f:
-                f.write(req.content)
-        else:
-            source = img_path
+        # 从网络获取图片，并转为cv2格式
+        response = requests.get(img_path)
+        image = Image.open(BytesIO(response.content))
+        source = cv2.cvtColor(np.asarray(image), cv2.COLOR_RGB2BGR)
+        source_shape = source.shape
 
         result = detect(
             source=source,
+            source_shape=source_shape,
             weights=os.path.split(os.path.realpath(__file__))[0] + "/detect/best.pt",
             img_size=640,
             conf_thres=0.25,
@@ -43,9 +47,4 @@ class DETECT(Resource):
         response = make_response(jsonify(
             {"description": "result中的元素的第一个位置是类别，剩下四个是x1y1x2y2", "code": 2000, "result": result}
         ))
-        if os.path.exists(source):
-            os.remove(source)
-            print('成功删除文件:', source)
-        else:
-            print('未找到此文件:', source)
         return response
