@@ -43,7 +43,7 @@ class DETECT(Resource):
             save_conf=False,
             augment=False,
         )
-        # view_image(image_path=source, result=result)
+        # view_image(source=source, result=result, shape=source_shape)
         response = make_response(jsonify(
             {"description": "result中的元素的第一个位置是类别，剩下四个是x1y1x2y2", "code": 2000, "result": result}
         ))
