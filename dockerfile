@@ -1,5 +1,7 @@
 # docker build -t testdetect .
 # docker run -it -p 5000:5000 --name=detect testdetect
+# docker tag testdetect 1980794141/flask-crystal-detect
+# docker push 1980794141/flask-crystal-detect
 # 设置python环境镜像
 FROM python:3.8
 
