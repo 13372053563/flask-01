@@ -7,7 +7,6 @@
 import os
 
 import torch
-from memory_profiler import profile
 
 from blue_prints.detect.models.experimental import attempt_load
 from blue_prints.detect.utils.datasets import LoadImages
