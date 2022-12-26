@@ -22,7 +22,7 @@ from blue_prints.detect.utils.torch_utils import select_device
 # model = torch.hub.load(path, 'best.pt', source='local')
 
 
-@profile(precision=4, stream=open("memory_profiler.log", "w+"))
+# @profile(precision=4, stream=open("memory_profiler.log", "w+"))
 def detect_method(source=r"D:\project\python\Python-Web\flask-01\blue_prints\detect\inference\images\bus.jpg",
                   weights="yolov7.pt",
                   # model='',
@@ -91,7 +91,7 @@ def detect_method(source=r"D:\project\python\Python-Web\flask-01\blue_prints\det
                     line = (num2label(int(cls)), *xywh, conf) if save_conf else (
                         num2label(int(cls)), *xywh)  # label format
                     result_one_image.append(line)
-    # del model, dataset
+    del model, dataset
     return result_one_image
 
 # if __name__ == '__main__':
