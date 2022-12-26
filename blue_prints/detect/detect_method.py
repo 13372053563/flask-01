@@ -4,12 +4,10 @@
 @file: detect_method.py
 @time: 2022/12/15 20:03
 """
-import cv2
-import numpy as np
-import requests
+import os
+
 import torch
-from PIL import Image
-from io import BytesIO
+from memory_profiler import profile
 
 from blue_prints.detect.models.experimental import attempt_load
 from blue_prints.detect.utils.datasets import LoadImages
@@ -18,18 +16,25 @@ from blue_prints.detect.utils.general import non_max_suppression, \
 from blue_prints.detect.utils.num2label import num2label
 from blue_prints.detect.utils.torch_utils import select_device
 
+# model = attempt_load(os.path.split(os.path.realpath(__file__))[0] + "/best.pt",
+#                      map_location=select_device())  # load FP32 model
+# path = os.path.split(os.path.realpath(__file__))[0]
+# model = torch.hub.load(path, 'best.pt', source='local')
 
-def detect(source=r"D:\project\python\Python-Web\flask-01\blue_prints\detect\inference\images\bus.jpg",
-           weights="yolov7.pt",
-           source_shape=[],
-           img_size=640,
-           conf_thres=0.25,
-           iou_thres=0.1,
-           save_conf=False,
-           augment=False,
-           ):
+
+@profile(precision=4, stream=open("memory_profiler.log", "w+"))
+def detect_method(source=r"D:\project\python\Python-Web\flask-01\blue_prints\detect\inference\images\bus.jpg",
+                  weights="yolov7.pt",
+                  # model='',
+                  source_shape=[],
+                  img_size=640,
+                  conf_thres=0.25,
+                  iou_thres=0.1,
+                  save_conf=False,
+                  augment=False,
+                  ):
     h, w, _ = source_shape[0], source_shape[1], source_shape[2]
-    # print(weights)
+
     device = select_device()
     half = device.type != 'cpu'  # half precision only supported on CUDA
 
@@ -86,10 +91,9 @@ def detect(source=r"D:\project\python\Python-Web\flask-01\blue_prints\detect\inf
                     line = (num2label(int(cls)), *xywh, conf) if save_conf else (
                         num2label(int(cls)), *xywh)  # label format
                     result_one_image.append(line)
+    # del model, dataset
     return result_one_image
 
-
-if __name__ == '__main__':
-    with torch.no_grad():
-        result_one_image = detect()
-    # print(result_one_image)
+# if __name__ == '__main__':
+#     with torch.no_grad():
+#         result_one_image = detect_method()
