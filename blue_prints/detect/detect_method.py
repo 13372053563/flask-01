@@ -4,7 +4,9 @@
 @file: detect_method.py
 @time: 2022/12/15 20:03
 """
-import os, sys
+import gc
+import os
+import sys
 
 import torch
 
@@ -89,6 +91,7 @@ def detect_method(source=r"D:\project\python\Python-Web\flask-01\blue_prints\det
                         num2label(int(cls)), *xywh)  # label format
                     result_one_image.append(line)
     del model, dataset
+    gc.collect()
     return result_one_image
 
 # if __name__ == '__main__':
