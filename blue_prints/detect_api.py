@@ -15,6 +15,7 @@ from flask import Blueprint, make_response, jsonify
 from flask_restplus import Api, Resource
 
 from blue_prints.detect.detect_method import detect_method
+from blue_prints.detect.detect_method2 import detect_method2
 
 detect_api = Blueprint("detect_api", __name__)
 api = Api(detect_api, version='1.0', title='crystal detection API',
@@ -31,10 +32,10 @@ class DETECT(Resource):
         source = cv2.cvtColor(np.asarray(image), cv2.COLOR_RGB2BGR)
         source_shape = source.shape
 
-        result = detect_method(
+        result = detect_method2(
             source=source,
             source_shape=source_shape,
-            weights=os.path.split(os.path.realpath(__file__))[0] + "/detect/best.pt",
+            # weights=os.path.split(os.path.realpath(__file__))[0] + "/detect/best.pt",
             img_size=640,
             conf_thres=0.25,
             iou_thres=0.1,

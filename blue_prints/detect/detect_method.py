@@ -4,7 +4,7 @@
 @file: detect_method.py
 @time: 2022/12/15 20:03
 """
-import os
+import os, sys
 
 import torch
 
@@ -15,16 +15,14 @@ from blue_prints.detect.utils.general import non_max_suppression, \
 from blue_prints.detect.utils.num2label import num2label
 from blue_prints.detect.utils.torch_utils import select_device
 
-# model = attempt_load(os.path.split(os.path.realpath(__file__))[0] + "/best.pt",
-#                      map_location=select_device())  # load FP32 model
-# path = os.path.split(os.path.realpath(__file__))[0]
-# model = torch.hub.load(path, 'best.pt', source='local')
+sys.path.append(os.path.split(os.path.realpath(__file__))[0])
+
+model = attempt_load(os.path.split(os.path.realpath(__file__))[0] + "/best.pt",
+                     map_location=select_device())  # load FP32 model
 
 
-# @profile(precision=4, stream=open("memory_profiler.log", "w+"))
 def detect_method(source=r"D:\project\python\Python-Web\flask-01\blue_prints\detect\inference\images\bus.jpg",
-                  weights="yolov7.pt",
-                  # model='',
+                  model=model,
                   source_shape=[],
                   img_size=640,
                   conf_thres=0.25,
@@ -37,7 +35,7 @@ def detect_method(source=r"D:\project\python\Python-Web\flask-01\blue_prints\det
     device = select_device()
     half = device.type != 'cpu'  # half precision only supported on CUDA
 
-    model = attempt_load(weights, map_location=device)  # load FP32 model
+    # model = attempt_load(weights, map_location=device)  # load FP32 model
     stride = int(model.stride.max())  # model stride
 
     if half:

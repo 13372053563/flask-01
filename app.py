@@ -1,13 +1,11 @@
+import os
+
 from flask import Flask
 from flask_bootstrap import Bootstrap
 from flask_cors import CORS
 from flask_restplus import Api
 
 from blue_prints.detect_api import detect_api, ns
-
-import sys
-
-sys.path.append("./blue_prints/detect")
 
 app = Flask(__name__)
 
